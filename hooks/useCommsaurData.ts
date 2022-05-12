@@ -1,7 +1,5 @@
 import { Commsaur } from "../components/CommsaurProvider";
-import rarity from '../rarity.json';
-
-const rarities = rarity as RarityData[];
+const rarities: RarityData[] = require('../rarity.json');
 
 interface RarityData {
     id: number;

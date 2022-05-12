@@ -7,7 +7,7 @@ import {
     useWaitForTransaction,
 } from 'wagmi';
 import { commsaurAddress, pfpAddress } from '../abis/commsaur';
-import { Commsaur } from './CommsaurProvider';
+import { Commsaur, useCommsaurContext } from './CommsaurProvider';
 import LoadingSpinner from './LoadingSpinner';
 import abi from '../abis/commsaur_abi.json';
 import pfpAbi from '../abis/commsaur_pfp_abi.json';
@@ -20,21 +20,21 @@ type Props = {
 };
 
 function WrapButton({ acknowledged, dino, setShowWarning, setError }: Props) {
-    const [wrapping, setWrapping] = useState(false);
     const { data: account } = useAccount();
     const [isApproved, setIsApproved] = useState(false);
     const addRecent = useAddRecentTransaction();
     const [transactionHash, setTransactionHash] = useState<string>();
+    const [wasWrapped, setWasWrapped] = useState(false);
+    const { toggleWrapped } = useCommsaurContext();
 
-    const { isLoading: useTransactionSending, isSuccess: wasWrapped } =
-        useWaitForTransaction({
-            hash: transactionHash,
-            enabled: !!transactionHash,
-            onSuccess() {
-                setWrapping(false);
-                dino.wrapped = true;
-            },
-        });
+    const { isLoading: useTransactionSending } = useWaitForTransaction({
+        hash: transactionHash,
+        enabled: !!transactionHash,
+        onSuccess() {
+            setWasWrapped(true);
+            toggleWrapped(dino.id, true);
+        },
+    });
 
     const { isLoading: isApprovedLoading } = useContractRead(
         {
@@ -56,7 +56,7 @@ function WrapButton({ acknowledged, dino, setShowWarning, setError }: Props) {
         },
     );
 
-    const { isLoading: approveLoading, write } = useContractWrite(
+    const { isLoading: approveWriting, write } = useContractWrite(
         {
             addressOrName: commsaurAddress,
             contractInterface: abi,
@@ -73,12 +73,7 @@ function WrapButton({ acknowledged, dino, setShowWarning, setError }: Props) {
         },
     );
 
-    const {
-        data: wrapData,
-        error: wrapError,
-        isLoading: wrapLoading,
-        write: wrapDinoCall,
-    } = useContractWrite(
+    const { isLoading: wrapLoading, write: wrapDinoCall } = useContractWrite(
         {
             addressOrName: commsaurAddress,
             contractInterface: pfpAbi,
@@ -127,9 +122,14 @@ function WrapButton({ acknowledged, dino, setShowWarning, setError }: Props) {
 
     return (
         <button
-            disabled={wrapping && (isApprovedLoading || approveLoading)}
+            disabled={
+                isApprovedLoading ||
+                approveWriting ||
+                wrapLoading ||
+                useTransactionSending
+            }
             onClick={doClick}
-            className={`text-center items-center justify-center rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 mt-2 px-4 py-2 hover:scale-[.98] transition-all ease-in-out`}
+            className={`flex text-center items-center justify-center rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 mt-2 px-4 py-2 hover:scale-[.98] transition-all ease-in-out`}
         >
             {wasWrapped && (
                 <p className="font-bold text-md text-white">Dino Wrapped!</p>
@@ -137,23 +137,23 @@ function WrapButton({ acknowledged, dino, setShowWarning, setError }: Props) {
             {!acknowledged && !wasWrapped && (
                 <p className="font-bold text-md text-white">Wrap into PFP</p>
             )}
-            {wrapping &&
-                (isApprovedLoading ||
-                    approveLoading ||
-                    useTransactionSending) && (
-                    <p>
-                        <LoadingSpinner />
-                    </p>
-                )}
+            {(isApprovedLoading ||
+                approveWriting ||
+                useTransactionSending ||
+                wrapLoading) && (
+                <p>
+                    <LoadingSpinner />
+                </p>
+            )}
             {acknowledged &&
                 !isApprovedLoading &&
                 !isApproved &&
-                !approveLoading && (
+                !approveWriting && (
                     <p className="font-bold text-md text-white">
                         Approve Contract
                     </p>
                 )}
-            {acknowledged && isApproved && !approveLoading && (
+            {acknowledged && isApproved && !wasWrapped && !approveWriting && (
                 <p className="font-bold text-md text-white">Wrap now!</p>
             )}
         </button>

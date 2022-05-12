@@ -2,8 +2,9 @@
 import { Dialog, Transition } from '@headlessui/react';
 import Link from 'next/link';
 import React, { Fragment, useEffect, useState } from 'react';
+import { commsaurAddress, pfpAddress } from '../abis/commsaur';
 import useCommsaurData from '../hooks/useCommsaurData';
-import { Commsaur } from './CommsaurProvider';
+import { Commsaur, getDinoImage } from './CommsaurProvider';
 import DownloadIcon from './icons/DownloadIcon';
 import UnwrapButton from './UnwrapButton';
 import WrapButton from './WrapButton';
@@ -28,7 +29,7 @@ function CommsaurComponent({ dino }: Props) {
         <>
             <div className="flex flex-row items-center justify-between">
                 <p className="text-3xl font-bold pb-3 flex flex-row items-center">
-                    Commsaur #{dino.id}
+                    {dino.wrapped && 'Wrapped '}Commsaur #{dino.id}
                 </p>
                 <DownloadIcon />
             </div>
@@ -36,8 +37,7 @@ function CommsaurComponent({ dino }: Props) {
                 <div className="flex flex-col max-w-full lg:max-w-[45%]">
                     <img
                         className="object-cover rounded-lg self-center"
-                        loading="lazy"
-                        src={dino.url}
+                        src={getDinoImage(dino)}
                         alt={`Commsaur #${dino.id}`}
                     />
                     {error && (
@@ -53,10 +53,14 @@ function CommsaurComponent({ dino }: Props) {
                             setError={setError}
                         />
                     )}
-                    {dino.wrapped && <UnwrapButton dino={dino} />}
+                    {dino.wrapped && (
+                        <UnwrapButton setError={setError} dino={dino} />
+                    )}
                     <div className="flex flex-row justify-between space-x-2">
                         <Link
-                            href={`https://looksrare.org/collections/0xBAcB34Bcf94442dbA033e9cf7216888B8170F0cE/${dino.id}`}
+                            href={`https://looksrare.org/collections/${
+                                dino.wrapped ? pfpAddress : commsaurAddress
+                            }/${dino.id}`}
                         >
                             <a
                                 target="_blank"
@@ -68,7 +72,9 @@ function CommsaurComponent({ dino }: Props) {
                             </a>
                         </Link>
                         <Link
-                            href={`https://opensea.io/assets/0xbacb34bcf94442dba033e9cf7216888b8170f0ce/${dino.id}`}
+                            href={`https://opensea.io/assets/${
+                                dino.wrapped ? pfpAddress : commsaurAddress
+                            }/${dino.id}`}
                         >
                             <a
                                 target="_blank"
@@ -107,8 +113,8 @@ function CommsaurComponent({ dino }: Props) {
                     })}
                     <p className="font-semibold text-slate-600 text-sm">
                         This Commsaur is ranked #{rarity.rank} with a rarity
-                        score of {rarity.rarity_score}. All of this data was
-                        provided by RaritySniper.
+                        score of {rarity.rarity_score}. Data provided by
+                        RaritySniper.
                     </p>
                 </div>
             </div>

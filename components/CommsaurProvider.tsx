@@ -1,21 +1,13 @@
 import { BigNumber } from 'ethers';
-import React, {
-    ReactNode,
-    useCallback,
-    useContext,
-    useEffect,
-    useState,
-} from 'react';
+import React, { ReactNode, useCallback, useContext, useState } from 'react';
 import { useAccount, useContractRead } from 'wagmi';
 import { commsaurAddress, pfpAddress } from '../abis/commsaur';
 import abi from '../abis/commsaur_abi.json';
 import pfpAbi from '../abis/commsaur_pfp_abi.json';
-import useContractBigNumber from '../hooks/useContractBigNumber';
 
 export type Commsaur = {
     id: number;
     wrapped?: boolean;
-    url: string;
 };
 
 type CommsaurContext = {
@@ -23,6 +15,15 @@ type CommsaurContext = {
     originalSize: number;
     reset: () => void;
     error: Error | null;
+    toggleWrapped: (id: number, state: boolean) => void;
+};
+
+export const getDinoImage = (saur: Commsaur): string => {
+    if (saur.wrapped) {
+        return `https://commsaur.mypinata.cloud/ipfs/QmU8QgaDxi8s3y9PhjYL9a5oeEUkQvGeHP1U7irqjuXaPu/${saur.id}.png`;
+    }
+
+    return `https://commsaur.mypinata.cloud/ipfs/Qme4mFVx1y2sqzTEDBvHTCnhFZJaaFP2ULXj6Rb5Xx32ui/${saur.id}.jpeg`;
 };
 
 const CommsaurCtx = React.createContext<CommsaurContext | null>(null);
@@ -97,7 +98,6 @@ function CommsaurProvider({ children }: Props) {
                     {
                         id,
                         wrapped: true,
-                        url: `https://commsaur.mypinata.cloud/ipfs/QmU8QgaDxi8s3y9PhjYL9a5oeEUkQvGeHP1U7irqjuXaPu/${id}.png`,
                     },
                 ]);
                 setPfpIdx((old) => old + 1);
@@ -125,7 +125,6 @@ function CommsaurProvider({ children }: Props) {
                     {
                         id: id,
                         wrapped: false,
-                        url: `https://commsaur.mypinata.cloud/ipfs/Qme4mFVx1y2sqzTEDBvHTCnhFZJaaFP2ULXj6Rb5Xx32ui/${id}.jpeg`,
                     },
                 ]);
                 setIdx((old) => old + 1);
@@ -134,6 +133,20 @@ function CommsaurProvider({ children }: Props) {
                 setError(error);
             },
         },
+    );
+
+    const toggleWrapped = useCallback(
+        (id: number, state: boolean) => {
+            const idx = herd.findIndex((dino) => dino.id === id);
+            const updated = { ...herd[idx], wrapped: state };
+            const youngHerd = [
+                ...herd.slice(0, idx),
+                updated,
+                ...herd.slice(idx + 1),
+            ];
+            setHerd(youngHerd);
+        },
+        [herd],
     );
 
     const reset = useCallback(() => {
@@ -150,6 +163,7 @@ function CommsaurProvider({ children }: Props) {
         originalSize: saurAmount + wrappedAmount,
         reset,
         error,
+        toggleWrapped,
     };
 
     return <CommsaurCtx.Provider value={ctx}>{children}</CommsaurCtx.Provider>;

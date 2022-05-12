@@ -1,11 +1,11 @@
 import Image from 'next/image';
 import React from 'react';
 import useCommsaurData from '../hooks/useCommsaurData';
-import { Commsaur } from './CommsaurProvider';
+import { Commsaur, getDinoImage } from './CommsaurProvider';
 
 type Props = {
     dino: Commsaur;
-    choose: (dino: Commsaur) => void;
+    choose: (dino: number) => void;
     selected: boolean;
 };
 
@@ -14,13 +14,13 @@ function CommsaurRow({ dino, choose, selected }: Props) {
 
     return (
         <div
-            onClick={() => choose(dino)}
+            onClick={() => choose(dino.id)}
             className={`flex flex-row space-x-2 px-2 py-2 mb-1 items-center cursor-pointer hover:scale-[.98] transition-all duration-100 ease-in-out ${
                 selected && 'bg-slate-900/60'
             } rounded-xl`}
         >
             <Image
-                src={dino.url}
+                src={getDinoImage(dino)}
                 height={40}
                 width={40}
                 alt={`Commsaur #${dino.id}`}

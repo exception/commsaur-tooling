@@ -1,20 +1,21 @@
-import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
 import CommsaurComponent from './CommsaurComponent';
-import { Commsaur, useCommsaurContext } from './CommsaurProvider';
+import { useCommsaurContext } from './CommsaurProvider';
 import CommsaurRow from './CommsaurRow';
 
 function ToolContainer() {
     const { data: account } = useAccount();
     const { originalSize: commsaurAmount, herd, reset } = useCommsaurContext();
-
     useEffect(() => {
         if (!account && herd.length > 0) {
             reset();
         }
     }, [account, herd, reset]);
-    const [commsaur, setCommsaur] = useState<Commsaur | null>(null);
+    useEffect(() => {
+        console.log(herd);
+    }, [herd]);
+    const [commsaur, setCommsaur] = useState<number>(-1);
 
     return (
         <div className="flex flex-col lg:block w-[90%] lg:w-[85%] xl:w-[75%] text-white">
@@ -34,13 +35,13 @@ function ToolContainer() {
                             key={`saur-${dino.id}`}
                             dino={dino}
                             choose={setCommsaur}
-                            selected={commsaur?.id == dino.id}
+                            selected={commsaur == dino.id}
                         />
                     ))}
                 </div>
             </div>
             <div className="w-full lg:w-[75%] lg:float-right">
-                {!commsaur && (
+                {commsaur == -1 && (
                     <div className="bg-gray-800 rounded-xl p-4 items-center justify-center text-center lg:ml-5">
                         <p className="text-gray-500 text-3xl font-bold">
                             Select one of your Commsaurs to access it&apos;s
@@ -48,9 +49,11 @@ function ToolContainer() {
                         </p>
                     </div>
                 )}
-                {commsaur && (
+                {commsaur >= 0 && (
                     <div className="bg-gray-800 rounded-xl p-4 lg:ml-5 h-auto">
-                        <CommsaurComponent dino={commsaur} />
+                        <CommsaurComponent
+                            dino={herd.find((saur) => saur.id == commsaur)!}
+                        />
                     </div>
                 )}
             </div>
