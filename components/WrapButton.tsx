@@ -26,6 +26,7 @@ function WrapButton({ acknowledged, dino, setShowWarning, setError }: Props) {
     const [transactionHash, setTransactionHash] = useState<string>();
     const [wasWrapped, setWasWrapped] = useState(false);
     const { toggleWrapped } = useCommsaurContext();
+    const [approveHash, setApproveHash] = useState<string>();
 
     const { isLoading: useTransactionSending } = useWaitForTransaction({
         hash: transactionHash,
@@ -33,6 +34,14 @@ function WrapButton({ acknowledged, dino, setShowWarning, setError }: Props) {
         onSuccess() {
             setWasWrapped(true);
             toggleWrapped(dino.id, true);
+        },
+    });
+
+    const { isLoading: isApproving } = useWaitForTransaction({
+        hash: approveHash,
+        enabled: !!approveHash,
+        onSuccess() {
+            setIsApproved(true);
         },
     });
 
@@ -64,8 +73,13 @@ function WrapButton({ acknowledged, dino, setShowWarning, setError }: Props) {
         'setApprovalForAll',
         {
             args: [commsaurAddress, true],
-            onSuccess() {
-                setIsApproved(true);
+            onSuccess(tx) {
+                addRecent({
+                    hash: tx.hash,
+                    description: 'Approve Wrapped Commsaurs contract',
+                });
+
+                setApproveHash(tx.hash);
             },
             onError(error) {
                 setError(error.message);
@@ -123,6 +137,7 @@ function WrapButton({ acknowledged, dino, setShowWarning, setError }: Props) {
     return (
         <button
             disabled={
+                isApproving ||
                 isApprovedLoading ||
                 approveWriting ||
                 wrapLoading ||
@@ -140,6 +155,7 @@ function WrapButton({ acknowledged, dino, setShowWarning, setError }: Props) {
             {(isApprovedLoading ||
                 approveWriting ||
                 useTransactionSending ||
+                isApproving ||
                 wrapLoading) && (
                 <p>
                     <LoadingSpinner />
@@ -148,6 +164,7 @@ function WrapButton({ acknowledged, dino, setShowWarning, setError }: Props) {
             {acknowledged &&
                 !isApprovedLoading &&
                 !isApproved &&
+                !isApproving &&
                 !approveWriting && (
                     <p className="font-bold text-md text-white">
                         Approve Contract

@@ -22,6 +22,7 @@ function UnwrapButton({ dino, setError }: Props) {
     const addRecent = useAddRecentTransaction();
     const [transactionHash, setTransactionHash] = useState<string>();
     const [wasUnwrapped, setWasUnwrapped] = useState(false);
+    const [approveHash, setApproveHash] = useState<string>();
     const { toggleWrapped } = useCommsaurContext();
 
     const { isLoading: useTransactionSending } = useWaitForTransaction({
@@ -30,6 +31,14 @@ function UnwrapButton({ dino, setError }: Props) {
         onSuccess() {
             toggleWrapped(dino.id, false);
             setWasUnwrapped(true);
+        },
+    });
+
+    const { isLoading: isApproving } = useWaitForTransaction({
+        hash: approveHash,
+        enabled: !!approveHash,
+        onSuccess() {
+            setIsApproved(true);
         },
     });
 
@@ -62,8 +71,13 @@ function UnwrapButton({ dino, setError }: Props) {
             'setApprovalForAll',
             {
                 args: [pfpAddress, true],
-                onSuccess() {
-                    setIsApproved(true);
+                onSuccess(tx) {
+                    addRecent({
+                        hash: tx.hash,
+                        description: 'Approve Wrapped Commsaurs contract',
+                    });
+
+                    setApproveHash(tx.hash);
                 },
                 onError(error) {
                     setError(error.message);
@@ -112,19 +126,25 @@ function UnwrapButton({ dino, setError }: Props) {
     return (
         <button
             onClick={doClick}
-            disabled={isApprovedLoading || approvedWriting}
+            disabled={isApprovedLoading || approvedWriting || isApproving}
             className={`flex text-center items-center justify-center rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 mt-2 px-4 py-2 hover:scale-[.98] transition-all ease-in-out`}
         >
             {wasUnwrapped && (
                 <p className="font-bold text-md text-white">Dino unwrapped!</p>
             )}
             {(isApprovedLoading ||
+                isApproving ||
                 approvedWriting ||
                 useTransactionSending ||
                 unwrapping) && <LoadingSpinner />}
-            {!isApprovedLoading && !isApproved && !approvedWriting && (
-                <p className="font-bold text-md text-white">Approve Contract</p>
-            )}
+            {!isApprovedLoading &&
+                !isApproved &&
+                !approvedWriting &&
+                !isApproving && (
+                    <p className="font-bold text-md text-white">
+                        Approve Contract
+                    </p>
+                )}
             {isApproved && !wasUnwrapped && !approvedWriting && (
                 <p className="font-bold text-md text-white">Unwrap Commsaur</p>
             )}
