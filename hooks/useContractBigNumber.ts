@@ -1,6 +1,6 @@
 import { ReadContractConfig } from "@wagmi/core";
 import { BigNumber, ContractInterface } from "ethers";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useContractRead } from "wagmi";
 
 type CallData = {
@@ -17,7 +17,7 @@ type ContractNumberRead = {
 
 function useContractBigNumber({ address, abi }: CallData, methodName: string, args: ReadContractConfig, enabled: boolean): ContractNumberRead {
     const [out, setOut] = useState(-1);
-    const { data, isLoading, error, refetch } = useContractRead(
+    const { isLoading, error, refetch } = useContractRead(
         {
             addressOrName: address,
             contractInterface: abi,
@@ -25,20 +25,18 @@ function useContractBigNumber({ address, abi }: CallData, methodName: string, ar
         methodName,
         {
             ...args,
-            enabled
+            enabled,
+            watch: true,
+            onSuccess (data) {
+                if ('_hex' in data) {
+                    const num = data as unknown as BigNumber;
+                    const id = num.toNumber();
+    
+                    setOut(id)
+                }
+            }
         },
     );
-
-    useEffect(() => {
-        if (data && !isLoading) {
-            if ('_hex' in data) {
-                const num = data as unknown as BigNumber;
-                const id = num.toNumber();
-
-                setOut(id)
-            }
-        }
-    }, [data, isLoading]);
 
     return { value: out, isLoading, error, refetch };
 }

@@ -7,13 +7,7 @@ import CommsaurRow from './CommsaurRow';
 
 function ToolContainer() {
     const { data: account } = useAccount();
-    const {
-        originalSize: commsaurAmount,
-        isLoading,
-        error,
-        herd,
-        reset,
-    } = useCommsaurContext();
+    const { originalSize: commsaurAmount, herd, reset } = useCommsaurContext();
 
     useEffect(() => {
         if (!account && herd.length > 0) {
@@ -48,8 +42,9 @@ function ToolContainer() {
             <div className="w-full lg:w-[75%] lg:float-right">
                 {!commsaur && (
                     <div className="bg-gray-800 rounded-xl p-4 items-center justify-center text-center lg:ml-5">
-                        <p className="text-red-200 text-6xl font-bold">
-                            None selected!
+                        <p className="text-gray-500 text-3xl font-bold">
+                            Select one of your Commsaurs to access it&apos;s
+                            tools!
                         </p>
                     </div>
                 )}

@@ -1,20 +1,12 @@
 /* eslint-disable @next/next/no-img-element */
 import { Dialog, Transition } from '@headlessui/react';
 import Link from 'next/link';
-import React, { Fragment, useCallback, useState } from 'react';
-import {
-    useAccount,
-    useContractRead,
-    useContractWrite,
-    useWaitForTransaction,
-} from 'wagmi';
+import React, { Fragment, useEffect, useState } from 'react';
 import useCommsaurData from '../hooks/useCommsaurData';
 import { Commsaur } from './CommsaurProvider';
-import abi from '../abis/commsaur_abi.json';
-import pfpAbi from '../abis/commsaur_pfp_abi.json';
-import LoadingSpinner from './LoadingSpinner';
-import { useAddRecentTransaction } from '@rainbow-me/rainbowkit';
-import { commsaurAddress, pfpAddress } from '../abis/commsaur';
+import DownloadIcon from './icons/DownloadIcon';
+import UnwrapButton from './UnwrapButton';
+import WrapButton from './WrapButton';
 
 type Props = {
     dino: Commsaur;
@@ -23,113 +15,23 @@ type Props = {
 function CommsaurComponent({ dino }: Props) {
     const rarity = useCommsaurData(dino);
     const [showWarning, setShowWarning] = useState(false);
-    const [wrapping, setWrapping] = useState(false);
-    const { data: account } = useAccount();
-    const [isApproved, setIsApproved] = useState(false);
-    const addRecent = useAddRecentTransaction();
-    const [transactionHash, setTransactionHash] = useState<string>();
+    const [acknowledged, setAcknowledged] = useState(false);
     const [error, setError] = useState('');
 
-    const { isLoading: useTransactionSending, isSuccess: wasWrapped } =
-        useWaitForTransaction({
-            hash: transactionHash,
-            enabled: !!transactionHash,
-        });
-
-    const { isLoading: isApprovedLoading } = useContractRead(
-        {
-            addressOrName: commsaurAddress,
-            contractInterface: abi,
-        },
-        'isApprovedForAll',
-        {
-            args: [account?.address, commsaurAddress],
-            enabled: wrapping,
-            onSuccess(data) {
-                if (typeof data === 'boolean') {
-                    setIsApproved(data);
-                }
-            },
-            onError(error) {
-                setError(error.message);
-            },
-        },
-    );
-
-    const { isLoading: approveLoading, write } = useContractWrite(
-        {
-            addressOrName: commsaurAddress,
-            contractInterface: abi,
-        },
-        'setApprovalForAll',
-        {
-            args: [commsaurAddress, true],
-            onSuccess() {
-                setIsApproved(true);
-            },
-            onError(error) {
-                setError(error.message);
-            },
-        },
-    );
-
-    const {
-        data: wrapData,
-        error: wrapError,
-        isLoading: wrapLoading,
-        write: wrapDinoCall,
-    } = useContractWrite(
-        {
-            addressOrName: commsaurAddress,
-            contractInterface: pfpAbi,
-        },
-        'safeTransferFrom(address,address,uint256)',
-        {
-            args: [account?.address, pfpAddress, dino.id],
-            onSuccess(tx) {
-                console.log('added', tx);
-                addRecent({
-                    hash: tx.hash,
-                    description: `Wrap Commsaur ${dino.id}`,
-                });
-
-                setTransactionHash(tx.hash);
-                setWrapping(false);
-            },
-            onError(error) {
-                setError(error.message);
-            },
-        },
-    );
-
-    const wrapDino = useCallback(() => {
+    useEffect(() => {
         setShowWarning(false);
-        setWrapping(true);
-    }, []);
-
-    const doClick = useCallback(() => {
-        if (!wrapping) {
-            setShowWarning(true);
-            return;
-        }
-
-        if (!isApproved && !isApprovedLoading) {
-            write();
-        } else if (isApproved && !wrapLoading) {
-            wrapDinoCall();
-        }
-    }, [
-        isApproved,
-        isApprovedLoading,
-        wrapping,
-        write,
-        wrapLoading,
-        wrapDinoCall,
-    ]);
+        setError('');
+        setAcknowledged(false);
+    }, [dino]);
 
     return (
         <>
-            <p className="text-3xl font-bold pb-3">Commsaur #{dino.id}</p>
+            <div className="flex flex-row items-center justify-between">
+                <p className="text-3xl font-bold pb-3 flex flex-row items-center">
+                    Commsaur #{dino.id}
+                </p>
+                <DownloadIcon />
+            </div>
             <div className="flex w-full flex-col lg:flex-row lg:space-x-3 justify-between">
                 <div className="flex flex-col max-w-full lg:max-w-[45%]">
                     <img
@@ -139,56 +41,26 @@ function CommsaurComponent({ dino }: Props) {
                         alt={`Commsaur #${dino.id}`}
                     />
                     {error && (
-                        <p className="text-red-300 text-lg text-center font-semibold">
+                        <p className="text-red-300 text-lg text-center font-semibold pt-2">
                             {error}
                         </p>
                     )}
-                    <button
-                        disabled={
-                            wrapping && (isApprovedLoading || approveLoading)
-                        }
-                        onClick={doClick}
-                        className={`text-center items-center justify-center rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 mt-2 px-4 py-2 hover:scale-[.98] transition-all ease-in-out`}
-                    >
-                        {wasWrapped && (
-                            <p className="font-bold text-md text-white">
-                                Dino Wrapped!
-                            </p>
-                        )}
-                        {!wrapping && !wasWrapped && (
-                            <p className="font-bold text-md text-white">
-                                Wrap into PFP
-                            </p>
-                        )}
-                        {wrapping &&
-                            (isApprovedLoading ||
-                                approveLoading ||
-                                useTransactionSending) && (
-                                <p>
-                                    <LoadingSpinner />
-                                </p>
-                            )}
-                        {wrapping &&
-                            !isApprovedLoading &&
-                            !isApproved &&
-                            !approveLoading && (
-                                <p className="font-bold text-md text-white">
-                                    Approve Contract
-                                </p>
-                            )}
-                        {wrapping && isApproved && !approveLoading && (
-                            <p className="font-bold text-md text-white">
-                                Wrap now!
-                            </p>
-                        )}
-                    </button>
+                    {!dino.wrapped && (
+                        <WrapButton
+                            acknowledged={acknowledged}
+                            dino={dino}
+                            setShowWarning={setShowWarning}
+                            setError={setError}
+                        />
+                    )}
+                    {dino.wrapped && <UnwrapButton dino={dino} />}
                     <div className="flex flex-row justify-between space-x-2">
                         <Link
                             href={`https://looksrare.org/collections/0xBAcB34Bcf94442dbA033e9cf7216888B8170F0cE/${dino.id}`}
                         >
                             <a
                                 target="_blank"
-                                className={`text-center w-full rounded-xl bg-gradient-to-r from-emerald-700 to-green-400 mt-2 px-4 py-2 hover:scale-[.98] transition-all ease-in-out`}
+                                className={`text-center w-full rounded-xl bg-gradient-to-r from-emerald-700 to-green-600 mt-2 px-4 py-2 hover:scale-[.98] transition-all ease-in-out`}
                             >
                                 <p className="font-bold text-md text-white">
                                     View on LooksRare
@@ -234,7 +106,7 @@ function CommsaurComponent({ dino }: Props) {
                         );
                     })}
                     <p className="font-semibold text-slate-600 text-sm">
-                        This Commsaur is ranked #{rarity.rank} with a Rarity
+                        This Commsaur is ranked #{rarity.rank} with a rarity
                         score of {rarity.rarity_score}. All of this data was
                         provided by RaritySniper.
                     </p>
@@ -278,7 +150,10 @@ function CommsaurComponent({ dino }: Props) {
                             </p>
 
                             <button
-                                onClick={wrapDino}
+                                onClick={() => {
+                                    setShowWarning(false);
+                                    setAcknowledged(true);
+                                }}
                                 className={`rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 mt-2 px-4 py-2 hover:scale-[.98] transition-all ease-in-out`}
                             >
                                 <p className="font-bold text-sm text-white">

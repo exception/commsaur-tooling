@@ -31,7 +31,7 @@ function CommsaurRow({ dino, choose, selected }: Props) {
                     {`Commsaur #${dino.id}`}
                 </p>
                 <p className="font-semibold text-sm text-slate-600">
-                    Rank #{rarity.rank}
+                    Rank #{rarity.rank} {dino.wrapped && ' (wrapped)'}
                 </p>
             </div>
         </div>
