@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { Dialog, Transition } from '@headlessui/react';
 import Link from 'next/link';
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import { commsaurAddress, pfpAddress } from '../abis/commsaur';
 import useCommsaurData from '../hooks/useCommsaurData';
 import { Commsaur, getDinoImage } from './CommsaurProvider';
@@ -25,13 +25,22 @@ function CommsaurComponent({ dino }: Props) {
         setAcknowledged(false);
     }, [dino]);
 
+    const download = useCallback(() => {
+        window.open(
+            dino.wrapped
+                ? `https://commsaur.mypinata.cloud/ipfs/QmU8QgaDxi8s3y9PhjYL9a5oeEUkQvGeHP1U7irqjuXaPu/${dino.id}.png`
+                : `https://commsaur-data.s3.us-east-1.amazonaws.com/fullRes/${dino.id}.png`,
+            '_blank',
+        );
+    }, [dino]);
+
     return (
         <>
             <div className="flex flex-row items-center justify-between">
                 <p className="text-3xl font-bold pb-3 flex flex-row items-center">
                     {dino.wrapped && 'Wrapped '}Commsaur #{dino.id}
                 </p>
-                <DownloadIcon />
+                <DownloadIcon onClick={download} />
             </div>
             <div className="flex w-full flex-col lg:flex-row lg:space-x-3 justify-between">
                 <div className="flex flex-col max-w-full lg:max-w-[45%]">
