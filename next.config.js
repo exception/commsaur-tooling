@@ -2,7 +2,7 @@
 const nextConfig = {
     reactStrictMode: true,
     images: {
-        domains: ['commsaur.mypinata.cloud'],
+        domains: ['commsaur.mypinata.cloud', 'd124myd65w4vuo.cloudfront.net'],
     },
 };
 
