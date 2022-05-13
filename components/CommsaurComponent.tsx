@@ -163,7 +163,7 @@ function CommsaurComponent({ dino }: Props) {
                                 owner can unwrap it to access the original
                                 version.
                             </p>
-                            <p className="text-slate-600 text-sm font-semibold">
+                            <p className="text-slate-600 text-sm font-semibold pt-2">
                                 Wrapping/unwrapping Commsaurs cost gas every
                                 time you wish to do this, however, approving
                                 Contracts is a one-time transaction (once for
