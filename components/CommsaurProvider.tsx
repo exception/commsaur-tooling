@@ -20,10 +20,10 @@ type CommsaurContext = {
 
 export const getDinoImage = (saur: Commsaur): string => {
     if (saur.wrapped) {
-        return `https://commsaur.mypinata.cloud/ipfs/QmU8QgaDxi8s3y9PhjYL9a5oeEUkQvGeHP1U7irqjuXaPu/${saur.id}.png`;
+        return `https://d124myd65w4vuo.cloudfront.net/pfps/${saur.id}.png`;
     }
 
-    return `https://commsaur.mypinata.cloud/ipfs/Qme4mFVx1y2sqzTEDBvHTCnhFZJaaFP2ULXj6Rb5Xx32ui/${saur.id}.jpeg`;
+    return `https://d124myd65w4vuo.cloudfront.net/fullBody/${saur.id}.jpeg`;
 };
 
 const CommsaurCtx = React.createContext<CommsaurContext | null>(null);
