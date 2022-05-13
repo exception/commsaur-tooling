@@ -28,8 +28,8 @@ function CommsaurComponent({ dino }: Props) {
     const download = useCallback(() => {
         window.open(
             dino.wrapped
-                ? `https://commsaur.mypinata.cloud/ipfs/QmU8QgaDxi8s3y9PhjYL9a5oeEUkQvGeHP1U7irqjuXaPu/${dino.id}.png`
-                : `https://commsaur-data.s3.us-east-1.amazonaws.com/fullRes/${dino.id}.png`,
+                ? `https://d124myd65w4vuo.cloudfront.net/pfps/${dino.id}.png`
+                : `https://d124myd65w4vuo.cloudfront.net/fullRes/${dino.id}.png`,
             '_blank',
         );
     }, [dino]);
@@ -162,6 +162,12 @@ function CommsaurComponent({ dino }: Props) {
                                 access to the unwrapped version, and the new
                                 owner can unwrap it to access the original
                                 version.
+                            </p>
+                            <p className="text-slate-600 text-sm font-semibold">
+                                Wrapping/unwrapping Commsaurs cost gas every
+                                time you wish to do this, however, approving
+                                Contracts is a one-time transaction (once for
+                                wrapping, and another for unwrapping).
                             </p>
 
                             <button
